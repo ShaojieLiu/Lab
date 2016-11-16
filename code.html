@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+    <body>
+<script type="text/javascript">
+//闭包,出镜率很高的一个应用
+    var publicFunction
+    var containerFunction = function () {
+        // 要求下面的输出:0,1,2,3,4
+        var privateValue = 0
+        return function () {
+            return privateValue++
+        }
+    }
+    publicFunction = containerFunction()
+    for (var i = 0; i < 5; i++) {
+        console.log(publicFunction())
+    }
+//什么是私有属性,一个最简单的闭包例子
+    var container = function () {
+        this.attr1 = 1
+        var attr2 = 2
+        this.getAttr2 = function () {return attr2}
+        this.setAttr2 = function (set) {attr2 = set}
+    }
+    var obj = new container()
+    console.log('这是公有属性:' ,obj.attr1)
+    console.log('这是私有属性,访问不到的', obj.attr2)
+    console.log('但是闭包可以访问私有属性:', obj.getAttr2())
+    obj.setAttr2(3)
+    console.log('利用闭包还可以set私有属性:', obj.getAttr2())
+// js有哪些假值
+// mixin和深复制
+//
+</script>
+    </body>
+</html>
