@@ -62,51 +62,20 @@
         <script src='/Users/liushaojie/Downloads/前端/ku/vue.js'></script>
     </head>
     <body>
-
         <div id=app>
             <input v-model=newTodo v-on:keyup.enter=addTodo placeholder="Press enter to add a new todo"></input>
             <button v-on:click="toggle">切换列表显示</button>
             <ul v-if="display=='todoList'" class="todoList">
                 <span>未完成列表</span>
-                <li v-for="todo in todos" v-if="!todo.finished"
-                                    v-on:mouseenter="showBtn($index)"
-                                    v-on:mouseleave="hideBtn($index)">
-                    <span class="btn-area">
-                        <span class=date>{{todo.time | time1}}&nbsp;&nbsp;&nbsp;</span>
-                        <button v-show=todo.hover class="btn-finish" v-on:click="finishTodo($index)">完成</button>
-                        <button v-show=todo.hover class="btn-edit" v-on:click="editTodo($index)">编辑</button>
-                        <button v-show=todo.hover class="btn-remove" v-on:click="removeTodo($index)">删除</button>
-                    </span>
-                    <span>{{todo.text}}</span>
-                </li>
+                <todo-li v-bind:todos="todos" fini=0 ></todo-li>
             </ul>
             <ul v-if="display=='finiList'" class="finiList">
                 <span>已完成列表</span>
-                <li v-for="todo in todos" v-if="todo.finished"
-                                    v-on:mouseenter="showBtn($index)"
-                                    v-on:mouseleave="hideBtn($index)">
-                    <span class="btn-area">
-                        <span class=date>{{todo.time | time1}}&nbsp;&nbsp;&nbsp;</span>
-                        <button v-show=todo.hover class="btn-finish" v-on:click="finishTodo($index)">完成</button>
-                        <button v-show=todo.hover class="btn-edit" v-on:click="editTodo($index)">编辑</button>
-                        <button v-show=todo.hover class="btn-remove" v-on:click="removeTodo($index)">删除</button>
-                    </span>
-                    <span>{{todo.text}}</span>
-                </li>
+                <todo-li v-bind:todos="todos" fini=1 ></todo-li>
             </ul>
             <ul v-if="display=='allList'" class="allList">
                 <span>所有任务列表</span>
-                <li v-for="todo in todos" v-bind:class="{ 'finished': todo.finished}"
-                                    v-on:mouseenter="showBtn($index)"
-                                    v-on:mouseleave="hideBtn($index)">
-                    <span class="btn-area">
-                        <span class=date>{{todo.time | time1}}&nbsp;&nbsp;&nbsp;</span>
-                        <button v-show=todo.hover class="btn-finish" v-on:click="finishTodo($index)">完成</button>
-                        <button v-show=todo.hover class="btn-edit" v-on:click="editTodo($index)">编辑</button>
-                        <button v-show=todo.hover class="btn-remove" v-on:click="removeTodo($index)">删除</button>
-                    </span>
-                    <span>{{todo.text}}</span>
-                </li>
+                <todo-li v-bind:todos="todos" fini=all ></todo-li>
             </ul>
         </div>
     </body>
@@ -116,22 +85,43 @@
         date = date[0] + ' ' + date[1].slice(0,-3)
         return date
     })
+    Vue.filter('judge', function (value, fini) {
+        if (fini != '0' && fini !='1') {return true}
+        return String(value) == fini
+    })
+    Vue.component('todo-li', {
+        props: ['todos', 'fini'],
+        template: '\
+        <li v-for="todo in todos" \
+            v-on:mouseenter="showBtn($index)" \
+            v-on:mouseleave="hideBtn($index)" \
+            v-if="todo.finished | judge fini"> \
+            <span class="btn-area">\
+                <span class=date>{{todo.time | time1}}&nbsp;&nbsp;&nbsp;</span>\
+                <button v-show=todo.hover class="btn-finish" v-on:click="finishTodo($index)">完成</button>\
+                <button v-show=todo.hover class="btn-edit" v-on:click="editTodo($index)">编辑</button>\
+                <button v-show=todo.hover class="btn-remove" v-on:click="removeTodo($index)">删除</button>\
+            </span>\
+            <span>{{todo.text}}</span>\
+        </li>',
+        methods: {
+            showBtn: function (index) {
+                this.todos[index].hover = true
+            },
+            hideBtn: function (index) {
+                this.todos[index].hover = false
+            },
+            removeTodo: function (index) {
+                this.todos.splice(index, 1)
+            },
+            finishTodo: function (index) {
+                console.log(this.todos[index].finished)
+                this.todos[index].finished = (this.todos[index].finished + 1) % 2
+            },
+        }
+    })
     new Vue({
         el: '#app',
-        // template: `
-        //     <input v-model=newTodo v-on:keyup.enter=addTodo placeholder="Press enter to add a new todo"></input>
-        //     <button v-on:click="toggle">切换列表显示</button>
-        //     <li v-for="todo in todos" v-if="!todo.finished"
-        //                     v-on:mouseenter="showBtn($index)"
-        //                     v-on:mouseleave="hideBtn($index)">
-        //         <span class="btn-area">
-        //             <span class=date>{{todo.time | time1}}&nbsp;&nbsp;&nbsp;</span>
-        //             <button v-show=todo.hover class="btn-finish" v-on:click="finishTodo($index)">完成</button>
-        //             <button v-show=todo.hover class="btn-edit" v-on:click="editTodo($index)">编辑</button>
-        //             <button v-show=todo.hover class="btn-remove" v-on:click="removeTodo($index)">删除</button>
-        //         </span>
-        //         <span>{{todo.text}}</span>
-        //     </li>`,
         data: {
             newTodo: '',
             display: 'todoList',
@@ -140,11 +130,10 @@
                 {
                     text: 'The first todo',
                     time: new Date().getTime(),
-                    finished: false,
+                    finished: 0,
                     hover: false,
                 }
             ],
-            finiList: [],
         },
         methods: {
             addTodo: function() {
@@ -152,22 +141,10 @@
                 if (text) {
                     this.todos.push({   text: text,
                                         time: new Date().getTime(),
-                                        finished: false,
+                                        finished: 0,
                                         hover: false,})
                     this.newTodo = ''
                 }
-            },
-            removeTodo: function (index) {
-                this.todos.splice(index, 1)
-            },
-            finishTodo: function (index) {
-                this.todos[index].finished = !this.todos[index].finished
-            },
-            showBtn: function (index) {
-                this.todos[index].hover = true
-            },
-            hideBtn: function (index) {
-                this.todos[index].hover = false
             },
             toggle: function() {
                 this.display = this.disList[(this.disList.indexOf(this.display)+1) % this.disList.length]
