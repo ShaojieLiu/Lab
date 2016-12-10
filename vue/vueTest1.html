@@ -11,8 +11,15 @@
             #app{
                 display: flex;
                 flex-direction: column;
-                width: 320px;
+                width: 350px;
                 align-items: stretch;
+            }
+            .btn-control{
+                display: flex;
+                justify-content: center;
+            }
+            .btn-control>.btn{
+                flex: auto;
             }
             ul{
                 /*border: thin solid black;*/
@@ -32,29 +39,29 @@
                 margin-top: 5px;
             }
             li:hover{
-                background-color: #eee;
+                opacity: .8;
             }
             .btn-area{
                 display: flex;
                 justify-content: flex-start;
             }
-            .btn-area button+button{
-                margin-left: 5px;
-            }
-            button{
+            .btn{
                 border: none;
                 background-color: lightgray;
                 border-radius: 5px;
+                margin: 3px;
+                box-shadow: 1px 1px 1px 1px gray;
             }
-            button:hover{
+            .btn:hover{
                 cursor: pointer;
                 opacity: 0.7;
             }
             .date{
-                line-height: 1.5em;
+                line-height: 1.8em;
             }
             .finished{
-                color: lightgray;
+                color: gray;
+                background-color: #aaa;
             }
             .todoList{background-color: pink;}
             .finiList{background-color: lightgreen;}
@@ -64,7 +71,10 @@
     <body>
         <div id=app>
             <input v-model=newTodo v-on:keyup.enter=addTodo placeholder="Press enter to add a new todo"></input>
-            <button v-on:click="toggle">切换列表显示</button>
+            <div class="btn-control">
+                <button class="btn" v-on:click="toggle">切换列表</button>
+                <button class="btn" v-on:click="save">保存数据</button>
+            </div>
             <ul v-if="display=='todoList'" class="todoList">
                 <span>未完成列表</span>
                 <todo-li v-bind:todos="todos" fini=0 ></todo-li>
@@ -95,12 +105,13 @@
         <li v-for="todo in todos" \
             v-on:mouseenter="showBtn($index)" \
             v-on:mouseleave="hideBtn($index)" \
-            v-if="todo.finished | judge fini"> \
+            v-if="todo.finished | judge fini" \
+            v-bind:class="{finished : todo.finished==1}"> \
             <span class="btn-area">\
                 <span class=date>{{todo.time | time1}}&nbsp;&nbsp;&nbsp;</span>\
-                <button v-show=todo.hover class="btn-finish" v-on:click="finishTodo($index)">完成</button>\
-                <button v-show=todo.hover class="btn-edit" v-on:click="editTodo($index)">编辑</button>\
-                <button v-show=todo.hover class="btn-remove" v-on:click="removeTodo($index)">删除</button>\
+                <button v-show=todo.hover class="btn btn-finish" v-on:click="finishTodo($index)">完成</button>\
+                <button v-show=todo.hover class="btn btn-edit" v-on:click="editTodo($index)">编辑</button>\
+                <button v-show=todo.hover class="btn btn-remove" v-on:click="removeTodo($index)">删除</button>\
             </span>\
             <span>{{todo.text}}</span>\
         </li>',
@@ -149,6 +160,16 @@
             toggle: function() {
                 this.display = this.disList[(this.disList.indexOf(this.display)+1) % this.disList.length]
             },
+            save: function() {
+                localStorage.todos = JSON.stringify(this.todos)
+                console.log(this.todos)
+            },
+        },
+        ready: function () {
+            console.log(localStorage.todos)
+            if (localStorage.todos) {
+                this.todos = JSON.parse(localStorage.todos)
+            }
         }
     })
 </script>
